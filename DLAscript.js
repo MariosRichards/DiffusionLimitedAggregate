@@ -30,12 +30,8 @@ window.onload = function() {
 	var canvasWidth = theCanvas.width;
 	var canvasHeight = theCanvas.height;
 
-	var initialImage = new Image();
-	//seedImage.crossOrigin = 'http://profile.ak.fbcdn.net/crossdomain.xml';//crossdomain xml file, this is facebook exampl
-	initialImage.src = "LPlogo.png";
-	
-//	seedImage.src = "https://si0.twimg.com/profile_images/1366004675/lp_bigger.jpg";
 	var seedImage = new Image();
+	seedImage.src = "LPlogo.png";
 	
 	var pixelArray = []; // use array of arrays format! best?
 	
@@ -57,21 +53,19 @@ window.onload = function() {
 		for (var ypos = 0; ypos <canvasHeight; ypos++)
 		{
 			pixelArray[xpos][ypos] = 0;
-			
 		}
 	}
+
 	
 	start = function(seedImage,theContext,canvasWidth,canvasHeight,pixelArray,seedImageWidth,seedImageHeight)
 	{
 		// put seed image onto centre of canvas!
 		// drawImage?
-		
-		
+	
 		seedImageWidth = seedImage.width;
 		seedImageHeight = seedImage.height;
 		theContext.drawImage(seedImage,(canvasWidth-seedImageWidth)/2,(canvasHeight-seedImageHeight)/2);
-		
-		//seedRadius = Math.max(seedImageWidth,seedImageHeight);
+
 		// get pixel data
 		var imgData=theContext.getImageData(0,0,canvasWidth,canvasHeight);
 		var notWhite;
@@ -80,62 +74,45 @@ window.onload = function() {
 		var imageData = imgData.data;
 		for (var pos = 0; pos <imgDataLength; pos+=4)
 		{
-		 //index = (x + y * imageData.width) * 4
+
 			xpos = ((pos/4) % canvasWidth)<<0;
 			ypos = ((pos/4) / canvasWidth)<<0;
 			// didn't work!
-			// console.log(pos,xpos,ypos);
-			
-			// var a =((canvasWidth /2)<<0);
-			// var b =((canvasHeight/2)<<0);
-			
-			// if (xpos>790 && xpos<810 && ypos > 390 && ypos <410)
-			// {
-				// console.log(pos,xpos,ypos);
-			// }
-			
-			// if ((xpos == 800) && (ypos == 400))
-			// {
-				// alert(imageData[pos]);
-				// alert(imageData[pos+1]);
-				// alert(imageData[pos+2]);
-				// alert(imageData[pos+3]);
-			// }
-			
-			// (imageData[pos]==255 && imageData[pos+1]==255 && imageData[pos+2]==255) ? notWhite = 0 : notWhite = 1;
 			(imageData[pos]==255 && imageData[pos+1]==255 && imageData[pos+2]==255) || imageData[pos+3] ==0 ? notWhite = 0 : notWhite = 1;
 			pixelArray[xpos][ypos] = notWhite;
 		
 		}
-		
-	
-		
+
 		// initial game loop and request draw
 		// var now = Date.now();
 		reqFrame(drawLoop);
 		
 	}	
+
 	
 	doClick = function(evt)
 	{
-		
-		sourceX = evt.pageX - theCanvas.offsetLeft;
-		sourceY = evt.pageY - theCanvas.offsetTop;	
+		if (pause)
+		{
+			sourceX = evt.pageX - theCanvas.offsetLeft;
+			sourceY = evt.pageY - theCanvas.offsetTop;	
 
-		sourceX = Math.min( Math.max(sourceX, 1), canvasWidth-2);
-		sourceY = Math.min( Math.max(sourceY, 1), canvasHeight-2);
-		
-		if (pixelArray[sourceX][sourceY])
-		{
-			stop = false;
-		}
-		else if (!stop)
-		{
-			stop = true;
-			reqFrame(drawLoop);
+			sourceX = Math.min( Math.max(sourceX, 1), canvasWidth-2);
+			sourceY = Math.min( Math.max(sourceY, 1), canvasHeight-2);
+			
+			if (pixelArray[sourceX][sourceY])
+			{
+				stop = false;
+			}
+			else if (!stop)
+			{
+				stop = true;
+				reqFrame(drawLoop);
+			}
 		}
 
     }	
+
 	
 	pause = function(evt)
 	{
@@ -147,33 +124,16 @@ window.onload = function() {
 	}
 	
 	theCanvas.addEventListener("mousemove",doClick,false);	
+	
 	theCanvas.addEventListener("dblclick",pause,false);	
-
-	initialImage.onload = function() {
-
-		var initialImageWidth = initialImage.width;
-		var initialImageHeight = initialImage.height;
-		theContext.drawImage(initialImage,(canvasWidth-initialImageWidth)/2,(canvasHeight-initialImageHeight)/2);	
 	
-		var initData = theCanvas.toDataURL();
-	
-		seedImage.src = initData;
-		
-		
-	};
-
 	seedImage.onload = function()
 	{
 	
-		start(seedImage,theContext,canvasWidth,canvasHeight,pixelArray,seedImageWidth,seedImageHeight); 
+		start(seedImage,theContext,canvasWidth,canvasHeight,pixelArray,seedImageWidth,seedImageHeight);
+		
 	}
-	
-	
 
-
-
-	
-	
 	
 	doWander = function()
 	{
@@ -186,11 +146,17 @@ window.onload = function() {
 		var x = sourceX;
 		var y = sourceY;
 		
+		var angle = Math.PI*2*Math.random;
+		var radius = (Math.min(canvasWidth,canvasHeight)-100)/2;
+		x = (canvasWidth/2 +    (Math.cos(angle)*radius))<<0;
+		y = (canvasHeight/2 +    (Math.sin(angle)*radius))<<0;		
+		
 		// check not already in contact
 			// outside the bounds!
 			
 		var wandering = true;
 		var brownian;
+		var wanderTime =0;
 		while (wandering)
 		{
 		// brownian motion
@@ -201,59 +167,92 @@ window.onload = function() {
 				case 0:
 					x++;
 					break;
-				
 				case 1:
 					y++;
 					break;				
-				
 				case 2:
-					x--;
+					y--;
 					break;				
-				
 				case 3:
-					y--;	
+					x--;
+					// break;				
+				// case 4:
+					// x--;
+					// y--;
+					// break;				
+				// case 5:
+					// x--;
+					// y++;
+					// break;					
+				// case 6:
+					// x++;
+					// y--;
+					// break;
+				// case 7:
+					// x++;
+					// y++;					
 			}
+		
+			// optimisation = store values -2
+			// transform map context to make origin at centre
+			// would lead to difficulties with array!
 		
 			if (x<1 || x >(canvasWidth-2) || y<1 || y >(canvasHeight-2))// if collide with wall
 			{
 				// wandering = true
 				// reset start position with new particle			
-				x = sourceX;
-				y = sourceY;				
+				// x = sourceX;
+				// y = sourceY;				
+				
+				var angle = Math.PI*2*Math.random();
+				var radius = (Math.min(canvasWidth,canvasHeight)-100)/2;
+				x = (canvasWidth/2 +    (Math.cos(angle)*radius))<<0;
+				y = (canvasHeight/2 +    (Math.sin(angle)*radius))<<0;
+				
+				
 			
 			} // assumes these two things are contradictory!
-			else if( pixelArray[x-1][y] || pixelArray[x][y-1] || pixelArray[x+1][y] || pixelArray[x][y+1] )// if collide with aggregate
+			else if( pixelArray[x-1][y]
+				  || pixelArray[x][y-1]
+				  || pixelArray[x+1][y]
+				  || pixelArray[x][y+1]
+				  // || pixelArray[x+1][y+1]
+				  // || pixelArray[x-1][y+1]
+				  // || pixelArray[x+1][y-1]
+				  // || pixelArray[x-1][y-1]
+				  )
+
+
+			// if collide with aggregate
 			{
 				// plot pixel on canvas
+				// wanderTime%256
+				// rgb(255,0,0)
+				// hsl(120,100%,50%)
+				var a = 'hsl('+(Math.log(wanderTime+1)*20)%360+',100%,50%)';
+				//'rgb('+ wanderTime%256 +',0,'+ (255-wanderTime%256) +')'
+				theContext.fillStyle = a ;
 				theContext.fillRect(x, y, 1, 1);
 				// update internal pixelArray				
 				pixelArray[x][y] = 1;
 				wandering = false; // allow for redraw!
-				
-				
+
 				// wandering = false;				
 
 			}
+			wanderTime++;
 		}
 		pixelNumber++;
 	}
-	
-	
-	
-	
 
-	
 	
     drawLoop = function() //
 	{
 		var now = Date.now();
-		// var dt = (now - lastTime) *6 / 100; // time in ms - fraction of 1000/60 ms
-		while ((Date.now()-now)<15)
+		while ((Date.now()-now)<8)
 		{
 			doWander();
 		}
-	//	moveBalls(dt);    // new position
-	//	drawBalls();    // show things
 
 		if (stop && pause)
 		{
@@ -261,10 +260,7 @@ window.onload = function() {
 		}
 
     }
-	
-	
 
-	
 };		
 
 
