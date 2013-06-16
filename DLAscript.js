@@ -30,10 +30,12 @@ window.onload = function() {
 	var canvasWidth = theCanvas.width;
 	var canvasHeight = theCanvas.height;
 
-	var seedImage = new Image();
-	seedImage.src = "LPlogo.png";
-//	seedImage.src = "https://si0.twimg.com/profile_images/1366004675/lp_bigger.jpg";
+	var initialImage = new Image();
+	//seedImage.crossOrigin = 'http://profile.ak.fbcdn.net/crossdomain.xml';//crossdomain xml file, this is facebook exampl
+	initialImage.src = "LPlogo.png";
 	
+//	seedImage.src = "https://si0.twimg.com/profile_images/1366004675/lp_bigger.jpg";
+	var seedImage = new Image();
 	
 	var pixelArray = []; // use array of arrays format! best?
 	
@@ -46,7 +48,8 @@ window.onload = function() {
 	var sourceX = canvasWidth/2;
 	var sourceY = 100;
 	
-	var stop = false;
+	var stop = true;
+	var pause = true;
 	
 	for (var xpos = 0; xpos <canvasWidth; xpos++)
 	{
@@ -68,7 +71,7 @@ window.onload = function() {
 		seedImageHeight = seedImage.height;
 		theContext.drawImage(seedImage,(canvasWidth-seedImageWidth)/2,(canvasHeight-seedImageHeight)/2);
 		
-		seedRadius = Math.max(seedImageWidth,seedImageHeight);
+		//seedRadius = Math.max(seedImageWidth,seedImageHeight);
 		// get pixel data
 		var imgData=theContext.getImageData(0,0,canvasWidth,canvasHeight);
 		var notWhite;
@@ -117,28 +120,56 @@ window.onload = function() {
 	{
 		
 		sourceX = evt.pageX - theCanvas.offsetLeft;
-		sourceY = evt.pageY - theCanvas.offsetTop;		
+		sourceY = evt.pageY - theCanvas.offsetTop;	
 
+		sourceX = Math.min( Math.max(sourceX, 1), canvasWidth-2);
+		sourceY = Math.min( Math.max(sourceY, 1), canvasHeight-2);
+		
+		if (pixelArray[sourceX][sourceY])
+		{
+			stop = false;
+		}
+		else if (!stop)
+		{
+			stop = true;
+			reqFrame(drawLoop);
+		}
 
     }	
 	
-	stop = function(evt)
+	pause = function(evt)
 	{
-		stop = true;
+		pause = !pause;
+		if (pause)
+		{
+			reqFrame(drawLoop);
+		}
 	}
 	
 	theCanvas.addEventListener("mousemove",doClick,false);	
-	theCanvas.addEventListener("dblclick",stop,false);	
+	theCanvas.addEventListener("dblclick",pause,false);	
 
-	seedImage.onload = function() {
+	initialImage.onload = function() {
 
-	    start(seedImage,theContext,canvasWidth,canvasHeight,pixelArray,seedImageWidth,seedImageHeight); 
+		var initialImageWidth = initialImage.width;
+		var initialImageHeight = initialImage.height;
+		theContext.drawImage(initialImage,(canvasWidth-initialImageWidth)/2,(canvasHeight-initialImageHeight)/2);	
+	
+		var initData = theCanvas.toDataURL();
+	
+		seedImage.src = initData;
+		
 		
 	};
 
+	seedImage.onload = function()
+	{
+	
+		start(seedImage,theContext,canvasWidth,canvasHeight,pixelArray,seedImageWidth,seedImageHeight); 
+	}
+	
 	
 
-	
 
 
 	
@@ -224,7 +255,7 @@ window.onload = function() {
 	//	moveBalls(dt);    // new position
 	//	drawBalls();    // show things
 
-		if (stop)
+		if (stop && pause)
 		{
 			reqFrame(drawLoop);
 		}
