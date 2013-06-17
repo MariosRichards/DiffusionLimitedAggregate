@@ -37,14 +37,13 @@ window.onload = function() {
 	
 	var seedImageWidth, seedImageHeight;
 	
-	var seedRadius;
 	
 	var pixelNumber = 0;
 	
 	var sourceX = canvasWidth/2;
 	var sourceY = canvasHeight/8;
 	
-	var radius = (Math.min(canvasWidth,canvasHeight)-100)/2;
+	var radius = (Math.min(canvasWidth,canvasHeight)-20)/2;
 
 	
 	var stop = true;
