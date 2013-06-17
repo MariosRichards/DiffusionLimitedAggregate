@@ -42,10 +42,14 @@ window.onload = function() {
 	var pixelNumber = 0;
 	
 	var sourceX = canvasWidth/2;
-	var sourceY = 100;
+	var sourceY = canvasHeight/8;
+	
+	var radius = (Math.min(canvasWidth,canvasHeight)-100)/2;
+
 	
 	var stop = true;
 	var pause = true;
+	var mouseSource = false;
 	
 	for (var xpos = 0; xpos <canvasWidth; xpos++)
 	{
@@ -92,22 +96,31 @@ window.onload = function() {
 	
 	doClick = function(evt)
 	{
+		var tempX, tempY;
 		if (pause)
 		{
-			sourceX = evt.pageX - theCanvas.offsetLeft;
-			sourceY = evt.pageY - theCanvas.offsetTop;	
+			tempX = evt.pageX - theCanvas.offsetLeft;
+			tempY = evt.pageY - theCanvas.offsetTop;	
 
-			sourceX = Math.min( Math.max(sourceX, 1), canvasWidth-2);
-			sourceY = Math.min( Math.max(sourceY, 1), canvasHeight-2);
+			tempX = Math.min( Math.max(tempX, 1), canvasWidth-2)<<0;
+			tempY = Math.min( Math.max(tempY, 1), canvasHeight-2)<<0;
 			
-			if (pixelArray[sourceX][sourceY])
+			if (pixelArray[tempX][tempY])
 			{
 				stop = false;
 			}
 			else if (!stop)
 			{
 				stop = true;
+				sourceX = tempX;
+				sourceY = tempY;
 				reqFrame(drawLoop);
+			}
+			else
+			{
+				sourceX = tempX;
+				sourceY = tempY;
+				
 			}
 		}
 
@@ -142,39 +155,162 @@ window.onload = function() {
 			// outside of the SeedRadius
 			// but inside the canvas
 			// cheat to start with
-			
-		var x = sourceX;
-		var y = sourceY;
-		
-		var angle = Math.PI*2*Math.random;
-		var radius = (Math.min(canvasWidth,canvasHeight)-100)/2;
-		x = (canvasWidth/2 +    (Math.cos(angle)*radius))<<0;
-		y = (canvasHeight/2 +    (Math.sin(angle)*radius))<<0;		
-		
-		// check not already in contact
-			// outside the bounds!
+		var x,y,angle;
+		if (mouseSource)
+		{			
+			x = sourceX;
+			y = sourceY;
+		}
+		else
+		{
+			angle = Math.PI*2*Math.random();
+			radius = (Math.min(canvasWidth,canvasHeight)-100)/2;
+			x = (canvasWidth/2 +    (Math.cos(angle)*radius))<<0;
+			y = (canvasHeight/2 +    (Math.sin(angle)*radius))<<0;		
+		}
 			
 		var wandering = true;
 		var brownian;
-		var wanderTime =0;
-		while (wandering)
+		var wanderTime = 0;
+		var canvasWidthCropped = canvasWidth-2;
+		var canvasHeightCropped = canvasHeight-2;
+		
+		while (wandering && stop)
 		{
 		// brownian motion
 			brownian = (Math.random()*4)<<0;
 
+			// if (x<1 || x >(canvasWidth-2) || y<1 || y >(canvasHeight-2))// if collide with wall	
+
+			// else if( pixelArray[x-1][y]
+				  // || pixelArray[x][y-1]
+				  // || pixelArray[x+1][y]
+				  // || pixelArray[x][y+1]
+			
+			
 			switch(brownian)
 			{
 				case 0:
 					x++;
+					if (x > canvasWidthCropped)
+					{
+						if (mouseSource)
+						{
+							x = sourceX;
+							y = sourceY;				
+						}
+						else
+						{
+							var angle = Math.PI*2*Math.random();
+							x = (canvasWidth/2 +    (Math.cos(angle)*radius))<<0;
+							y = (canvasHeight/2 +   (Math.sin(angle)*radius))<<0;
+						}					
+					}
+					else if (
+						   pixelArray[x+1][y]
+						|| pixelArray[x][y-1]
+						|| pixelArray[x][y+1]
+							)
+					{
+						theContext.fillStyle = 'hsl('+(Math.log(wanderTime+1)*20)%360+',100%,50%)';
+						theContext.fillRect(x, y, 1, 1);				// plot pixel on canvas
+						pixelArray[x][y] = 1;				// update internal pixelArray				
+						wandering = false; // allow for redraw!					
+					}					
 					break;
+					
 				case 1:
 					y++;
-					break;				
+					if (y >canvasHeightCropped)
+					{
+						if (mouseSource)
+						{
+							x = sourceX;
+							y = sourceY;				
+						}
+						else
+						{
+							var angle = Math.PI*2*Math.random();
+							x = (canvasWidth/2 +    (Math.cos(angle)*radius))<<0;
+							y = (canvasHeight/2 +   (Math.sin(angle)*radius))<<0;
+						}					
+					}			
+					else if (
+						   pixelArray[x-1][y]
+						|| pixelArray[x+1][y]
+						|| pixelArray[x][y+1]
+							)
+					{
+						theContext.fillStyle = 'hsl('+(Math.log(wanderTime+1)*20)%360+',100%,50%)';
+						theContext.fillRect(x, y, 1, 1);				// plot pixel on canvas
+						pixelArray[x][y] = 1;				// update internal pixelArray				
+						wandering = false; // allow for redraw!					
+					}					
+					break;	
+					
 				case 2:
 					y--;
+					if (y<=0)
+					{
+						if (mouseSource)
+						{
+							x = sourceX;
+							y = sourceY;				
+						}
+						else
+						{
+							var angle = Math.PI*2*Math.random();
+							x = (canvasWidth/2 +    (Math.cos(angle)*radius))<<0;
+							y = (canvasHeight/2 +   (Math.sin(angle)*radius))<<0;
+						}					
+					}
+					else if (
+						pixelArray[x-1][y]
+						|| pixelArray[x][y-1]
+						|| pixelArray[x+1][y]
+							)
+					{
+						theContext.fillStyle = 'hsl('+(Math.log(wanderTime+1)*20)%360+',100%,50%)';
+						theContext.fillRect(x, y, 1, 1);				// plot pixel on canvas
+						pixelArray[x][y] = 1;				// update internal pixelArray				
+						wandering = false; // allow for redraw!					
+					}					
+
 					break;				
 				case 3:
 					x--;
+					if (x<=0)
+					{
+						if (mouseSource)
+						{
+							x = sourceX;
+							y = sourceY;				
+						}
+						else
+						{
+							var angle = Math.PI*2*Math.random();
+							x = (canvasWidth/2 +    (Math.cos(angle)*radius))<<0;
+							y = (canvasHeight/2 +   (Math.sin(angle)*radius))<<0;
+						}					
+					}
+					else if (
+						pixelArray[x-1][y]
+						|| pixelArray[x][y-1]
+						|| pixelArray[x][y+1]
+							)
+					{
+						theContext.fillStyle = 'hsl('+(Math.log(wanderTime+1)*20)%360+',100%,50%)';
+						theContext.fillRect(x, y, 1, 1);				// plot pixel on canvas
+						pixelArray[x][y] = 1;				// update internal pixelArray				
+						wandering = false; // allow for redraw!					
+					}
+					
+					
+					
+					
+					
+					
+					
 					// break;				
 				// case 4:
 					// x--;
@@ -192,54 +328,42 @@ window.onload = function() {
 					// x++;
 					// y++;					
 			}
+			// if (x<1 || x >(canvasWidth-2) || y<1 || y >(canvasHeight-2))// if collide with wall
+			// {
+				// debugger;
+			
+			// }
 		
 			// optimisation = store values -2
 			// transform map context to make origin at centre
 			// would lead to difficulties with array!
 		
-			if (x<1 || x >(canvasWidth-2) || y<1 || y >(canvasHeight-2))// if collide with wall
-			{
-				// wandering = true
-				// reset start position with new particle			
-				// x = sourceX;
-				// y = sourceY;				
-				
-				var angle = Math.PI*2*Math.random();
-				var radius = (Math.min(canvasWidth,canvasHeight)-100)/2;
-				x = (canvasWidth/2 +    (Math.cos(angle)*radius))<<0;
-				y = (canvasHeight/2 +    (Math.sin(angle)*radius))<<0;
+			// if (x<1 || x >(canvasWidth-2) || y<1 || y >(canvasHeight-2))// if collide with wall
+			// {
+				// // reset start position with new particle			
+
 				
 				
 			
-			} // assumes these two things are contradictory!
-			else if( pixelArray[x-1][y]
-				  || pixelArray[x][y-1]
-				  || pixelArray[x+1][y]
-				  || pixelArray[x][y+1]
-				  // || pixelArray[x+1][y+1]
-				  // || pixelArray[x-1][y+1]
-				  // || pixelArray[x+1][y-1]
-				  // || pixelArray[x-1][y-1]
-				  )
+			// } // assumes these two things are contradictory!
+			// else if( pixelArray[x-1][y]
+				  // || pixelArray[x][y-1]
+				  // || pixelArray[x+1][y]
+				  // || pixelArray[x][y+1]
+				  // // || pixelArray[x+1][y+1]
+				  // // || pixelArray[x-1][y+1]
+				  // // || pixelArray[x+1][y-1]
+				  // // || pixelArray[x-1][y-1]
+				  // )
 
 
-			// if collide with aggregate
-			{
-				// plot pixel on canvas
-				// wanderTime%256
-				// rgb(255,0,0)
-				// hsl(120,100%,50%)
-				var a = 'hsl('+(Math.log(wanderTime+1)*20)%360+',100%,50%)';
-				//'rgb('+ wanderTime%256 +',0,'+ (255-wanderTime%256) +')'
-				theContext.fillStyle = a ;
-				theContext.fillRect(x, y, 1, 1);
-				// update internal pixelArray				
-				pixelArray[x][y] = 1;
-				wandering = false; // allow for redraw!
-
-				// wandering = false;				
-
-			}
+			// // if collide with aggregate
+			// {
+				// theContext.fillStyle = 'hsl('+(Math.log(wanderTime+1)*20)%360+',100%,50%)';
+				// theContext.fillRect(x, y, 1, 1);				// plot pixel on canvas
+				// pixelArray[x][y] = 1;				// update internal pixelArray				
+				// wandering = false; // allow for redraw!
+			// }
 			wanderTime++;
 		}
 		pixelNumber++;
@@ -249,9 +373,12 @@ window.onload = function() {
     drawLoop = function() //
 	{
 		var now = Date.now();
-		while ((Date.now()-now)<8)
+		//var dt = (Date.now()-now);
+		while ((Date.now()-now)<30 && stop)
 		{
 			doWander();
+		//	var dt = (Date.now()-now);	
+		//	pixelNumber = 0;
 		}
 
 		if (stop && pause)
