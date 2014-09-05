@@ -48,7 +48,7 @@ window.onload = function() {
 	
 	var stop = true;
 	var pause = true;
-	var mouseSource = false;
+	var mouseSource = true;
 	
 	for (var xpos = 0; xpos <canvasWidth; xpos++)
 	{
